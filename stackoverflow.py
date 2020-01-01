@@ -62,10 +62,12 @@ class StackOverflow(kp.Plugin):
 		
 		try:
 			opener = kpnet.build_urllib_opener()
+			opener.addheaders = [('Accept-Encoding', 'gzip')]
 			with opener.open(url_string) as request:
 				response = gzip.decompress(request.read())
 		except Exception as exc:
 			self.err("Could not send request: ", exc)
+			return answers
 			
 		content = json.loads(response.decode('utf-8'))["items"]
 
