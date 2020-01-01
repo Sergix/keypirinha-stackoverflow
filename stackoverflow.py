@@ -20,6 +20,7 @@ import keypirinha as kp
 import keypirinha_util as kpu
 import keypirinha_net as kpnet
 import gzip, json
+import urllib.parse
 
 class StackOverflow(kp.Plugin):
 	
@@ -56,7 +57,8 @@ class StackOverflow(kp.Plugin):
 	def get_query(self, input):
 		answers = []
 		url_string = 'https://api.stackexchange.com/2.2/search?site=stackoverflow&order=desc&sort=activity&pagesize=10&intitle='
-		url_string += input
+		input_parsed = urllib.parse.quote_plus(input)
+		url_string += input_parsed
 		
 		try:
 			opener = kpnet.build_urllib_opener()
