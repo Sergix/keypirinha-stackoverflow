@@ -29,7 +29,12 @@ class StackOverflow(kp.Plugin):
 	
 	def __init__(self):
 		super().__init__()
+		self.opener = None
 			
+	def on_start(self):
+		self.opener = kpnet.build_urllib_opener()
+		self.opener.addheaders = [('Accept-Encoding', 'gzip')]
+
 	def on_catalog(self):
 		self.set_catalog([
             self.create_item(
@@ -46,10 +51,15 @@ class StackOverflow(kp.Plugin):
 		if not items_chain or items_chain[0].category() != kp.ItemCategory.KEYWORD or not user_input:
 			return
 		
-		self.log(user_input)
-		
+		if self.should_terminate(0.5):
+			return
+
 		suggestions = self.get_query(user_input)
 		self.set_suggestions(suggestions, kp.Match.FUZZY, kp.Sort.DEFAULT)
+
+	def on_events(self, flags):
+		if flags & kp.Events.NETOPTIONS:
+			self.on_start()
 
 	def on_execute(self, item, action):
 		kpu.shell_execute(item.short_desc())
@@ -61,9 +71,7 @@ class StackOverflow(kp.Plugin):
 		url_string += input_parsed
 		
 		try:
-			opener = kpnet.build_urllib_opener()
-			opener.addheaders = [('Accept-Encoding', 'gzip')]
-			with opener.open(url_string) as request:
+			with self.opener.open(url_string) as request:
 				response = gzip.decompress(request.read())
 		except Exception as exc:
 			self.err("Could not send request: ", exc)
